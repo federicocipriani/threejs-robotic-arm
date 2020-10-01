@@ -1,11 +1,12 @@
 Physijs.scripts.worker = '../libs/physijs_worker.js';
 Physijs.scripts.ammo = '../libs/ammo.js';
 
-let ground, scene, controls;
+let ground, arm_material, scene, controls;
 
 init();
 createGround();
 createRoboticArm();
+createCube();
 animate();
 
 function init() {
@@ -68,7 +69,7 @@ function createGround() {
 }
 
 function createRoboticArm() {
-    var arm_material = Physijs.createMaterial(
+    arm_material = Physijs.createMaterial(
         new THREE.MeshLambertMaterial({ color: 0xffffff }),
         0.9,
         0.3
@@ -99,14 +100,23 @@ function createRoboticArm() {
     scene.add(base);
 
     var constraint_base = new Physijs.DOFConstraint(
-        ground, // First object to be constrained
-        base, // OPTIONAL second object - if omitted then physijs_mesh_1
-        // will be constrained to the scene
-        new THREE.Vector3(0, 1, 0) // point in the scene to apply the constraint
+        base,
+        ground,
+        new THREE.Vector3(0, 0.75, 0)
     );
     scene.addConstraint(constraint_base);
-    constraint_base.setAngularLowerLimit(new THREE.Vector3(0, -Math.PI, 0));
-    constraint_base.setAngularUpperLimit(new THREE.Vector3(0, Math.PI, 0));
+    // constraint_base.setAngularLowerLimit(new THREE.Vector3(0, -Math.PI, 0));
+    constraint_base.setAngularLowerLimit({
+        x: 0,
+        y: -Math.PI,
+        z: 0,
+    });
+    // constraint_base.setAngularUpperLimit(new THREE.Vector3(0, Math.PI, 0));
+    constraint_base.setAngularUpperLimit({
+        x: 0,
+        y: Math.PI,
+        z: 0,
+    });
 
     // --------------------------------------------------------
     // MIDDLE SECTION
@@ -187,6 +197,18 @@ function createRoboticArm() {
     );
 }
 
+function createCube() {
+    // --------------------------------------------------------
+    // CUBE
+    var cube = new Physijs.BoxMesh(
+        new THREE.BoxGeometry(2, 2, 2),
+        arm_material,
+        0
+    );
+    scene.add(cube);
+    cube.position.set(8, 2.25, 0);
+}
+
 window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -211,6 +233,17 @@ document.addEventListener('keydown', function (ev) {
                 -Math.PI / 2,
                 Math.PI / 2,
                 1,
+                200
+            );
+            constraint_base.enableAngularMotor(1);
+            break;
+        case 78:
+            // Right
+            constraint_base.configureAngularMotor(
+                1,
+                -Math.PI / 2,
+                Math.PI / 2,
+                -1,
                 200
             );
             constraint_base.enableAngularMotor(1);
